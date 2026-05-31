@@ -1,6 +1,18 @@
 
 
 
+20260531 - add provenancee graph
+add a /gene_set_provenance call, which calls a db_utils method that returns the gene set provenance graph 
+from the following db tables:
+gene_set
+provennance
+provenance_node
+provenance_edge
+return the results into the a json knowledge graph object of the format of the file 
+/Users/mduby/Code/MiscWorkspace/JasonPortalTestCFDE20260331/data/provenance/HuBMAP_Liver__scRNA__Leiden5_FCN3.overlay.json
+
+
+
 20250520 - create web service
 in the python-flask-server directory, build a flask server that runs on python 3.12 
 the server will return data from a sqlite database which is stored in the data/genseco_v0.sqlite file
