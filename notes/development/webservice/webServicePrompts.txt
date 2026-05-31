@@ -1,0 +1,15 @@
+
+
+
+20250520 - create web service
+in the python-flask-server directory, build a flask server that runs on python 3.12 
+the server will return data from a sqlite database which is stored in the data/genseco_v0.sqlite file
+create a file utils/db_utils.py that has a method to return all gene set data linked in the 
+gene_set, provenance, gene_set_gene_symbol, gene_symbol tables by the gene_set.gene_set_id primary key
+as a json object
+link the db_utils method to the flask server returning the json data from the gene_set_id GET input parameter
+export a pip requirements file to notes/requirements.txt
+
+
+
+
