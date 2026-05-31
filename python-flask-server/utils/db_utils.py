@@ -83,3 +83,28 @@ def get_gene_set_data(gene_set_id: int) -> dict | None:
         return gene_set_data
     finally:
         connection.close()
+
+
+def list_gene_sets(limit: int = 20) -> list[dict]:
+    connection = sqlite3.connect(DB_PATH)
+    connection.row_factory = sqlite3.Row
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                gene_set_id,
+                standard_name,
+                collection_name,
+                tags,
+                license_code
+            FROM gene_set
+            ORDER BY gene_set_id
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+        return [_row_to_dict(row) for row in rows]
+    finally:
+        connection.close()
