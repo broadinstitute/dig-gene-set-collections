@@ -26,7 +26,7 @@ def _parse_json_field(field_name: str, raw_value: str | None) -> tuple[object | 
 def _build_gene_set_provenance_response(
     gene_set_row: sqlite3.Row,
     geneset_metadata: dict | None,
-    provenance_graph: dict | None,
+    knowledge_graph: dict,
 ) -> dict:
     metadata = geneset_metadata or {}
     gene_set_meta = metadata.get("gene_set", {})
@@ -35,9 +35,6 @@ def _build_gene_set_provenance_response(
     input_meta = metadata.get("input", {})
     lineage_meta = metadata.get("lineage", {})
     output_meta = metadata.get("output", {})
-
-    graph_id = next(iter(provenance_graph), None) if provenance_graph else None
-    graph_body = provenance_graph.get(graph_id, {}) if graph_id is not None else {}
 
     return {
         "access_route": None,
@@ -53,11 +50,7 @@ def _build_gene_set_provenance_response(
         "extractor_output_files": output_meta.get("files", []),
         "focus_node": provenance_meta.get("focus_node_id"),
         "geneset_provenance_path": provenance_meta.get("path"),
-        "knowledge_graph": {
-            "graph_id": graph_id,
-            "nodes": graph_body.get("nodes", []),
-            "edges": graph_body.get("edges", []),
-        },
+        "knowledge_graph": knowledge_graph,
         "landing_page": None,
         "meta_path": output_meta.get("files", [{}])[-1].get("path") if output_meta.get("files") else None,
         "modality": gene_set_meta.get("assay"),
@@ -71,6 +64,66 @@ def _build_gene_set_provenance_response(
         "source_files": input_meta.get("files", []),
         "source_resource": gene_set_row["collection_name"],
         "tissue_or_system": None,
+    }
+
+
+def _parse_json_blob(field_name: str, raw_value: str | None) -> object | None:
+    parsed, _ = _parse_json_field(field_name, raw_value)
+    return parsed
+
+
+def _build_knowledge_graph(
+    provenance_graph: dict | None,
+    provenance_node_rows: list[sqlite3.Row],
+    provenance_edge_rows: list[sqlite3.Row],
+) -> dict:
+    graph_id = next(iter(provenance_graph), None) if provenance_graph else None
+
+    nodes = []
+    for row in provenance_node_rows:
+        properties = _parse_json_blob("additional_properties", row["additional_properties"]) or {}
+        original_id = properties.get("original_id")
+        node = {
+            "id": original_id or f"provenance_node:{row['provenance_node_id']}",
+            "name": row["name"],
+            "type": row["node_type"],
+            "description": row["description"],
+            "dcc_url": row["dcc_url"],
+            "drc_url": row["drc_url"],
+        }
+        for key, value in properties.items():
+            if key != "original_id":
+                node[key] = value
+        nodes.append(node)
+
+    node_id_map = {
+        row["provenance_node_id"]: (
+            (_parse_json_blob("additional_properties", row["additional_properties"]) or {}).get("original_id")
+            or f"provenance_node:{row['provenance_node_id']}"
+        )
+        for row in provenance_node_rows
+    }
+
+    edges = []
+    for row in provenance_edge_rows:
+        properties = _parse_json_blob("additional_properties", row["additional_properties"]) or {}
+        original_id = properties.get("original_id")
+        edge = {
+            "id": original_id or f"provenance_edge:{row['provenance_edge_id']}",
+            "source": node_id_map.get(row["source_node_id"], f"provenance_node:{row['source_node_id']}"),
+            "target": node_id_map.get(row["target_node_id"], f"provenance_node:{row['target_node_id']}"),
+            "label": row["label"],
+            "description": row["description"],
+        }
+        for key, value in properties.items():
+            if key != "original_id":
+                edge[key] = value
+        edges.append(edge)
+
+    return {
+        "graph_id": graph_id,
+        "nodes": nodes,
+        "edges": edges,
     }
 
 
@@ -192,8 +245,42 @@ def get_gene_set_provenance(gene_set_id: int) -> dict | None:
         provenance_graph, provenance_graph_error = _parse_json_field(
             "provenance_graph", row["provenance_graph"]
         )
+        provenance_node_rows = connection.execute(
+            """
+            SELECT
+                provenance_node_id,
+                node_type,
+                name,
+                description,
+                dcc_url,
+                drc_url,
+                additional_properties
+            FROM provenance_node
+            WHERE gene_set_id = ?
+            ORDER BY provenance_node_id
+            """,
+            (gene_set_id,),
+        ).fetchall()
+        provenance_edge_rows = connection.execute(
+            """
+            SELECT
+                provenance_edge_id,
+                source_node_id,
+                target_node_id,
+                label,
+                description,
+                additional_properties
+            FROM provenance_edge
+            WHERE gene_set_id = ?
+            ORDER BY provenance_edge_id
+            """,
+            (gene_set_id,),
+        ).fetchall()
+        knowledge_graph = _build_knowledge_graph(
+            provenance_graph, provenance_node_rows, provenance_edge_rows
+        )
 
-        response = _build_gene_set_provenance_response(row, geneset_metadata, provenance_graph)
+        response = _build_gene_set_provenance_response(row, geneset_metadata, knowledge_graph)
         if geneset_metadata_error is not None:
             response["geneset_metadata_error"] = geneset_metadata_error
         if provenance_graph_error is not None:
