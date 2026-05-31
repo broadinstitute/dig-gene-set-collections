@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 
-from utils.db_utils import get_gene_set_data, list_gene_sets
+from utils.db_utils import get_gene_set_data, get_gene_set_provenance, list_gene_sets
 
 
 app = Flask(__name__)
@@ -22,6 +22,19 @@ def gene_set() -> tuple:
 @app.get("/gene-sets")
 def gene_sets() -> tuple:
     return jsonify(list_gene_sets(20)), 200
+
+
+@app.get("/gene_set_provenance")
+def gene_set_provenance() -> tuple:
+    gene_set_id = request.args.get("gene_set_id", type=int)
+    if gene_set_id is None:
+        return jsonify({"error": "gene_set_id query parameter is required"}), 400
+
+    data = get_gene_set_provenance(gene_set_id)
+    if data is None:
+        return jsonify({"error": f"gene_set_id {gene_set_id} not found"}), 404
+
+    return jsonify(data), 200
 
 
 if __name__ == "__main__":

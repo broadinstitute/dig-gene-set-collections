@@ -1,3 +1,4 @@
 
 *.sqlite
 python-flask-server/data/genseco_v0.sqlite
+*.pyc
