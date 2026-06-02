@@ -1,9 +1,22 @@
 
 
+20260602 - adding web call for s3 data
+add a file python-flask-server/utils/web_utils.py that has a method
+that returns what is in the provenance_node.dcc_url database value for the given provenance_node_id
+if the value is an s3 link, fetch the file at the s3 link
+if the value is an http link, return the page at the link
+if neither of these, do nothing
+handle any errors from missing files, permissions or other issues
+hook this meethod up to the app.py with GET web signature /provenance_node/<id>
 
-20260531 - add provenancee graph
+
+
+
+
+
+20260531 - add provenance graph
 add a /gene_set_provenance call, which calls a db_utils method that returns the gene set provenance graph 
-from the following db tables:
+from the following sqlite db tables:
 gene_set
 provennance
 provenance_node
