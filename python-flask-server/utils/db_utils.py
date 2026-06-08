@@ -289,3 +289,48 @@ def get_gene_set_provenance(gene_set_id: int) -> dict | None:
         return response
     finally:
         connection.close()
+
+
+def get_gene_set_graph(gene_set_id: int) -> list[dict] | None:
+    connection = sqlite3.connect(DB_PATH)
+    connection.row_factory = sqlite3.Row
+
+    try:
+        gene_set_row = connection.execute(
+            """
+            SELECT gene_set_id
+            FROM gene_set
+            WHERE gene_set_id = ?
+            """,
+            (gene_set_id,),
+        ).fetchone()
+
+        if gene_set_row is None:
+            return None
+
+        rows = connection.execute(
+            """
+            SELECT
+                pedge.gene_set_id,
+                pedge.provenance_edge_id AS edge_id,
+                pedge.label AS edge_name,
+                pedge.source_node_id AS source_id,
+                snode.node_type AS source_type,
+                snode.name AS source_name,
+                pedge.target_node_id AS target_id,
+                tnode.node_type AS target_type,
+                tnode.name AS target_name
+            FROM provenance_node AS snode,
+                 provenance_node AS tnode,
+                 provenance_edge AS pedge
+            WHERE pedge.gene_set_id = ?
+              AND snode.provenance_node_id = pedge.source_node_id
+              AND tnode.provenance_node_id = pedge.target_node_id
+            ORDER BY pedge.provenance_edge_id
+            """,
+            (gene_set_id,),
+        ).fetchall()
+
+        return [_row_to_dict(row) for row in rows]
+    finally:
+        connection.close()
