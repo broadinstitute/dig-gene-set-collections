@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 
 from utils.db_utils import get_gene_set_data, get_gene_set_provenance, list_gene_sets
+from utils.web_utils import fetch_provenance_node_content
 
 
 app = Flask(__name__)
@@ -35,6 +36,11 @@ def gene_set_provenance() -> tuple:
         return jsonify({"error": f"gene_set_id {gene_set_id} not found"}), 404
 
     return jsonify(data), 200
+
+
+@app.get("/provenance_node/<int:provenance_node_id>")
+def provenance_node(provenance_node_id: int):
+    return fetch_provenance_node_content(provenance_node_id)
 
 
 if __name__ == "__main__":
