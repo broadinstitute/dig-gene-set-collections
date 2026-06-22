@@ -34,6 +34,13 @@ def _get_provenance_node_url(provenance_node_id: int) -> str | None:
         connection.close()
 
 
+def _guess_mimetype(filename: str) -> str:
+    if filename.lower().endswith(".gmt"):
+        return "text/plain"
+
+    return mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+
 def _s3_to_https(url: str) -> tuple[str, str]:
     parsed = parse.urlparse(url)
     bucket = parsed.netloc
@@ -45,7 +52,7 @@ def _s3_to_https(url: str) -> tuple[str, str]:
 
 def _fetch_s3_with_aws_cli(url: str) -> Response:
     filename = Path(parse.urlparse(url).path).name or "download"
-    mimetype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    mimetype = _guess_mimetype(filename)
 
     try:
         completed = subprocess.run(
@@ -79,7 +86,7 @@ def _build_success_response(
     content_disposition: str | None,
 ) -> Response:
     filename = Path(parse.urlparse(source_url).path).name or "download"
-    mimetype = content_type or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    mimetype = content_type or _guess_mimetype(filename)
 
     response = Response(body, status=200, mimetype=mimetype)
     response.headers["Content-Disposition"] = content_disposition or f'inline; filename="{filename}"'
