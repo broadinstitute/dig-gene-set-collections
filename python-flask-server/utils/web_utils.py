@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import mimetypes
 import sqlite3
+import subprocess
 from pathlib import Path
 from urllib import error, parse, request
 
@@ -42,6 +43,35 @@ def _s3_to_https(url: str) -> tuple[str, str]:
     return f"https://{bucket}.s3.amazonaws.com/{quoted_key}", filename
 
 
+def _fetch_s3_with_aws_cli(url: str) -> Response:
+    filename = Path(parse.urlparse(url).path).name or "download"
+    mimetype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+    try:
+        completed = subprocess.run(
+            ["aws", "s3", "cp", url, "-", "--no-progress"],
+            check=True,
+            capture_output=True,
+        )
+    except FileNotFoundError:
+        return _html_error("unable to fetch s3 object: aws CLI is not installed", 500)
+    except PermissionError as exc:
+        return _html_error(f"unable to fetch {url}: permission denied ({exc})", 403)
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr.decode("utf-8", errors="replace").strip() or f"aws exited with code {exc.returncode}"
+        if "AccessDenied" in stderr or "403" in stderr:
+            status_code = 403
+        elif "NoSuchKey" in stderr or "404" in stderr:
+            status_code = 404
+        else:
+            status_code = 502
+        return _html_error(f"unable to fetch {url}: {stderr}", status_code)
+
+    response = Response(completed.stdout, status=200, mimetype=mimetype)
+    response.headers["Content-Disposition"] = f'inline; filename="{filename}"'
+    return response
+
+
 def _build_success_response(
     body: bytes,
     source_url: str,
@@ -62,7 +92,7 @@ def fetch_provenance_node_content(provenance_node_id: int) -> Response:
         return _html_error(f"provenance_node_id {provenance_node_id} not found", 404)
 
     if dcc_url.startswith("s3://"):
-        fetch_url, _ = _s3_to_https(dcc_url)
+        return _fetch_s3_with_aws_cli(dcc_url)
     elif dcc_url.startswith("http://") or dcc_url.startswith("https://"):
         fetch_url = dcc_url
     else:
