@@ -7,6 +7,7 @@ from utils.db_utils import (
     get_gene_set_graph,
     get_gene_set_provenance,
     list_gene_sets,
+    search_gene_sets,
 )
 from utils.web_utils import fetch_provenance_node_content
 
@@ -62,6 +63,16 @@ def gene_set_graph() -> tuple:
         return jsonify({"error": f"gene_set_id {gene_set_id} not found"}), 404
 
     return jsonify(data), 200
+
+
+@app.get("/search")
+def search() -> tuple:
+    search_string = request.args.get("q", type=str)
+    if not search_string:
+        return jsonify({"error": "q query parameter is required"}), 400
+
+    limit = request.args.get("limit", default=200, type=int)
+    return jsonify(search_gene_sets(search_string, limit)), 200
 
 
 @app.get("/provenance_node/<int:provenance_node_id>")

@@ -1,5 +1,9 @@
 
 
+
+20260623 - logging
+for all app.py web service calls, add a log entry with the url of the call
+
 20260622 - error with s3 passthrough
 
 while accessing the web service locally at http://127.0.0.1:5000/provenance_node/92

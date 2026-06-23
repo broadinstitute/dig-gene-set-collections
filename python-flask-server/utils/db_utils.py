@@ -13,6 +13,10 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     return {key: row[key] for key in row.keys()}
 
 
+def _escape_like_pattern(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _parse_json_field(field_name: str, raw_value: str | None) -> tuple[object | None, str | None]:
     if raw_value is None:
         return None, None
@@ -329,6 +333,34 @@ def get_gene_set_graph(gene_set_id: int) -> list[dict] | None:
             ORDER BY pedge.provenance_edge_id
             """,
             (gene_set_id,),
+        ).fetchall()
+
+        return [_row_to_dict(row) for row in rows]
+    finally:
+        connection.close()
+
+
+def search_gene_sets(search_string: str, limit: int = 200) -> list[dict]:
+    connection = sqlite3.connect(DB_PATH)
+    connection.row_factory = sqlite3.Row
+
+    try:
+        safe_limit = max(1, limit)
+        pattern = f"%{_escape_like_pattern(search_string)}%"
+        rows = connection.execute(
+            """
+            SELECT
+                gene_set_id,
+                standard_name,
+                collection_name,
+                tags,
+                license_code
+            FROM gene_set
+            WHERE standard_name LIKE ? ESCAPE '\\'
+            ORDER BY standard_name
+            LIMIT ?
+            """,
+            (pattern, safe_limit),
         ).fetchall()
 
         return [_row_to_dict(row) for row in rows]

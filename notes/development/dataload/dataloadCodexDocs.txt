@@ -1,0 +1,84 @@
+
+
+
+
+20260623 - how collction names are determines
+
+
+=======================================================
+
+• The code path is patched. I’m doing a compile check and a focused read of the new collection-name resolution so we can confirm the S3 prefix behavior is exactly what you asked for.
+
+• Explored
+  └ Read populate_database.py, README.md
+
+• Ran PYTHONPYCACHEPREFIX=/tmp python3 -m py_compile database/src/populate_database.py
+  └ (no output)
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Updated database/src/populate_database.py so S3 loads now use the top-level directory in the S3 object key as the collection/prefix for standard_name. Local filesystem loads still use --collection-name as before.
+
+  Example: an object like s3://bucket/MarcTestOutput/rna_sc_programs/models/.../genesets.gmt will now produce names starting with MarcTestOutput__..., not GTEx__... or the CLI collection name.
+
+  I also updated database/README.md to document the new naming rule.
+
+  Verification: PYTHONPYCACHEPREFIX=/tmp python3 -m py_compile database/src/populate_database.py passed.
+
+
+=======================================================
+
+i loaded liger process generated data from /Users/mduby/Data/Broad/GeneSetIncubator/Liger/MarcTestOutput
+  and got the name
+  GTEx__rna_sc_programs__dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+  even though this is not GTEx related
+  was this done in the populate_database.py script
+
+
+• I’m checking how standard_name is constructed in the loader and whether GTEx is coming from a default in populate_database.py versus the input data itself.
+
+• Explored
+  └ Read populate_database.py
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• I’ve confirmed the standard_name prefix comes from the loader, not the LIGER input name itself. One more read to show the default CLI value that makes it GTEx when you don’t override it.
+
+• Explored
+  └ Read populate_database.py
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Yes. That GTEx__... prefix was added by populate_database.py.
+
+  The relevant logic is in database/src/populate_database.py:858, where it builds:
+
+  standard_name = f"{collection_name}__{tissue}__{gene_set_name}"
+
+  And collection_name defaults to GTEx in the CLI parser at database/src/populate_database.py:1002:
+
+  parser.add_argument(
+      '--collection-name',
+      default='GTEx',
+
+  So if you ran the loader without --collection-name, the script would prepend GTEx__ to every loaded gene set, 
+  including LIGER-derived ones.
+
+  In your example:
+
+  - collection_name became GTEx
+  - tissue was inferred from the path as rna_sc_programs
+  - gene_set_name came from the GMT entry itself:
+    dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+
+  That is how you got:
+  GTEx__rna_sc_programs__dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+
+  So this was done by the loader, not by the LIGER process output.
+
+  If you want, I can patch the script so --collection-name is required instead of defaulting to GTEx, 
+  which would prevent this kind of accidental mislabeling.
+
+
+
+
