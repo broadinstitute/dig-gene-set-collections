@@ -4,7 +4,6 @@
 .headers on
 .mode column
 
-
 select count(*) from gene_set;
 
 
@@ -30,6 +29,6 @@ where pedge.gene_set_id = 723
 and snode.provenance_node_id = pedge.source_node_id
 and tnode.provenance_node_id = pedge.target_node_id;
 
-select * from provenance_edge where provenance_edge_id = 87;
 
-select * from provenance_node where provenance_node_id = 92;
+
+

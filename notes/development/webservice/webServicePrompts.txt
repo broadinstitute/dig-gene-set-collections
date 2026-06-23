@@ -1,14 +1,38 @@
 
 
+20260622 - error with s3 passthrough
+
+while accessing the web service locally at http://127.0.0.1:5000/provenance_node/92
+I get the following error trying to retrieve a node file from s3
+unable to fetch s3://dig-gene-set-data/GTEx/genesets/adipose_tissue/models/HZ1/extractor/age70_20/genesets.gmt: HTTP 403
+i am logged in through the aws cli
+
+
+
+20260608 - 
+add a /gene_set_graph GET call which takes in a gene_set_id and 
+call a new method in db_utils that queries the database to return the gene set graph information 
+from the provenance_node and provenance_edge tables
+return a json list with the results from the following sql query:
+select pedge.gene_set_id, pedge.provenance_edge_id as edge_id, pedge.label as edge_name,
+pedge.source_node_id as source_id, snode.node_type as source_type, snode.name as source_name,
+pedge.target_node_id as target_id, tnode.node_type as target_type, tnode.name as target_name
+from provenance_node snode, provenance_node tnode, provenance_edge pedge
+where pedge.gene_set_id = <gene_set_id>
+and snode.provenance_node_id = pedge.source_node_id
+and tnode.provenance_node_id = pedge.target_node_id
+
+
+
 20260602 - adding web call for s3 data
 add a file python-flask-server/utils/web_utils.py that has a method
 that returns what is in the provenance_node.dcc_url database value for the given provenance_node_id
 if the value is an s3 link, fetch the file at the s3 link
 if the value is an http link, return the page at the link
-if neither of these, do nothing
-handle any errors from missing files, permissions or other issues
+if neither of these, return <invalid operation>
+handle any errors from missing files, permissions or other issues with a page with the appropriate message
 hook this meethod up to the app.py with GET web signature /provenance_node/<id>
-
+make this GET method so that a web link to  /provenance_node/<id> will display or download the file at the link
 
 
 

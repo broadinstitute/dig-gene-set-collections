@@ -1,0 +1,9 @@
+
+
+
+- error with s3 pass through
+
+s3://dig-gene-set-data/GTEx/genesets/adipose_tissue/models/HZ1/extractor/age70_20/genesets.gmt
+s3://dig-gene-set-data/GTEx/genesets/adipose_tissue/models/HZ1/extractor/age70_20/genesets.gmt
+
+

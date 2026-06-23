@@ -1,0 +1,16 @@
+
+
+
+20260609 - data load to s3
+aws s3 cp /path/to/local/directory s3://YOUR-BUCKET-NAME/ --recursive
+
+
+20260609 - new ryan data
+
+  554  scp -r mduby@dig-ae-dev-03:00~/humgen/diabetes2/users/ryank/CFDE/geneset_extractors/runs/gtex_all_models/genesets/bladder .
+  555  scp -r mduby@dig-ae-dev-03:/humgen/diabetes2/users/ryank/CFDE/geneset_extractors/runs/gtex_all_models/genesets/bladder .
+  560  scp -r mduby@dig-ae-dev-03:/humgen/diabetes2/users/ryank/CFDE/geneset_extractors/runs/gtex_all_models/genesets/pancreas/models/AC* pancreas/models/
+  570  scp -r mduby@dig-ae-dev-03:/humgen/diabetes2/users/ryank/CFDE/geneset_extractors/runs/gtex_all_models/genesets/muscle/models/AB2* muscle/models/
+
+
+

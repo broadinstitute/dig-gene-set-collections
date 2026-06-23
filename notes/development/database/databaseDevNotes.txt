@@ -1,0 +1,68 @@
+
+sqlite db:
+----------
+.headers on
+.mode column
+
+select * from gene_set;
+
+select count(*) from gene_set;
+
+test runs new ryan data 20260809:
+---------------------------------
+- load from directory 
+python3 populate_database.py \
+--db-path ./20260609fileTest.sqlite \
+--schema-file ../schema/database-schema.sql \
+--data-root /Users/mduby/Data/Broad/GeneSetIncubator/NewRyanData \
+--output-log ./load_database_file_20260609.log \
+--require-provenance
+
+- load from s3 bucket
+python3 populate_database.py \
+--db-path ./20260609s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://geneset-marc-test02 \
+--output-log ./load_database_s3_320260609.log \
+--require-provenance
+
+
+
+test runs:
+----------
+- load from directory 
+python3 populate_database.py \
+--db-path ./test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--data-root ~/Data/Broad/GeneSetIncubator/TestUpload/ \
+--output-log ./load_database.log \
+--require-provenance
+
+- load from s3 bucket
+python3 populate_database.py \
+--db-path ./s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://geneset-marc-test \
+--output-log ./load_database.log \
+--require-provenance
+
+
+sqlite db:
+----------
+.headers on
+.mode column
+
+select * from gene_set;
+
+select count(*) from gene_set;
+
+select * from gene_set where gene_set_id > 60 limit 20;
+
+
+select provenance_node_id, dcc_url from provenance_node where gene_set_id = 167;
+
+select * from gene_set_gene_symbol where gene_set_id = 167;
+
+
+select provenance_node_id, description from provenance_node where gene_set_id = 167;
+

@@ -1,0 +1,61 @@
+
+
+- 20260623 - load from s3 with colection name
+python3 populate_database.py \
+--db-path ./20260609s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://geneset-marc-test02 \
+--collection-name LIGER \
+--output-log ./load_database_s3_320260609.log \
+--require-provenance
+
+
+- load from s3 bucket
+python3 populate_database.py \
+--db-path ./20260618s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-filtered \
+--output-log ./20260618load_database_s3.log \
+--require-provenance
+
+
+
+
+# gtex - still need inputs
+aws s3 cp s3://dig-gene-set-data/GTEx/ s3://dig-gene-set-filtered/GTEx/ \
+--recursive \
+--exclude "*" \
+--include "*/models/HZ1/extractor/age50_20/*" \
+--include "*/models/HZ1/extractor/age60_20/*" \
+--include "*/models/HZ1/extractor/age70_20/*"
+
+aws s3 cp s3://dig-gene-set-data/GTEx/input s3://dig-gene-set-filtered/GTEx/input \
+--recursive \
+
+
+# hubmap
+aws s3 cp s3://dig-gene-set-data/HuBMAP/ s3://dig-gene-set-filtered/HuBMAP/ \
+--recursive \
+--include "*" \
+
+
+# lincs
+aws s3 cp s3://dig-gene-set-data/LINCS_L1000/ s3://dig-gene-set-filtered/LINCS_L1000/ \
+--recursive \
+--include "*" \
+
+
+- MoTrPAC
+aws s3 cp s3://dig-gene-set-data/MoTrPAC/ s3://dig-gene-set-filtered/MoTrPAC/ \
+--recursive \
+--exclude "*" \
+--include "*/models/HZ1/*" \
+
+aws s3 cp s3://dig-gene-set-data/MoTrPAC/ s3://dig-gene-set-filtered/MoTrPAC/ \
+--recursive \
+--exclude "*" \
+--include "*/models/TR1/*" \
+
+aws s3 cp s3://dig-gene-set-data/MoTrPAC/input s3://dig-gene-set-filtered/MoTrPAC/input \
+--recursive \
+

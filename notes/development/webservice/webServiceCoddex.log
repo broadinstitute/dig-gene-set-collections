@@ -1,0 +1,86 @@
+
+
+
+20260521 - update for provenance return as json
+• Updated python-flask-server/utils/db_utils.py:1 so geneset_metadata is handled the same way as provenance_graph.
+
+  Now both fields:
+
+  - return parsed JSON objects/arrays when valid
+  - return null plus a *_error field if the stored text is invalid JSON
+  - return null with no error if the DB value itself is NULL
+
+  Verified on gene_set_id=1:
+
+  - provenance_graph is a dict
+  - geneset_metadata is a dict
+  - no geneset_metadata_error
+  - syntax check passed
+  
+• Updated python-flask-server/utils/db_utils.py:1 so provenance_graph is parsed from its SQLite TEXT value into a real JSON object before the Flask response is returned.
+
+  Behavior now:
+
+  - Valid JSON in provenance_graph is returned as a nested object/array, not a raw string.
+  - Invalid JSON does not break the endpoint.
+  - If parsing fails, the response includes provenance_graph: null plus a provenance_graph_error message explaining the parse failure.
+  - If the DB field is NULL, it stays null with no error field.
+
+  I verified:
+
+  - valid JSON parses correctly
+  - malformed JSON produces the expected error message
+  - get_gene_set_data(1) now returns a populated parsed provenance_graph
+  - syntax check passed
+
+  If you want, I can make the same change for geneset_metadata as well, if that column also stores JSON text.
+
+
+20260521 - 
+• The app is not failing on type. It is reading a database file whose provenance table is currently empty.
+
+  What I verified against /Users/mduby/Code/PythonWorkspace/GeneSetExtractor/python-flask-server/data/genseco_v0.sqlite:
+
+  - SELECT COUNT(*) FROM provenance; returns 0
+  - SELECT ... FROM provenance WHERE gene_set_id = 1; returns no rows
+  - the Python helper returns None for both provenance fields
+  - the app resolves DB_PATH to that same file
+
+  I also checked for SQLite WAL sidecars:
+
+  - no genseco_v0.sqlite-wal
+  - no genseco_v0.sqlite-shm
+  - PRAGMA journal_mode; returns delete
+
+  So the likely explanations are:
+
+  - you ran the query against a different genseco_v0.sqlite
+  - you have a different copy open elsewhere
+  - the row existed in an uncommitted session and is not in this file now
+
+  If you want, I can make the service expose the exact DB path in a health/debug endpoint so there’s no ambiguity, or add startup logging of the resolved SQLite file.
+
+
+› the provenance.provenance_graph sqlite field is a json object; can you display properly in the return and handle any errors if it is not formatted correctly
+
+
+• I’m updating the DB utility so provenance_graph is returned as parsed JSON when valid, and so malformed JSON is surfaced explicitly instead of silently passing through as a string.
+
+
+20260521 - build app
+
+• Built the Flask service in python-flask-server/app.py:1 and added the SQLite access layer in python-flask-server/utils/db_utils.py:1. The endpoint is GET /gene-set?gene_set_id=<id> and returns one JSON object containing the gene_set fields, linked
+  provenance fields, and a gene_symbols array from gene_set_gene_symbol + gene_symbol. Missing gene_set_id returns 400; unknown IDs return 404.
+
+  I also added python-flask-server/notes/requirements.txt:1 with Flask==3.1.1 and created python-flask-server/utils/init.py:1.
+
+  Verified locally:
+
+  - get_gene_set_data(1) returns data and 145 linked gene symbols.
+  - Flask test client request to /gene-set?gene_set_id=1 returned 200.
+  - Syntax check passed with PYTHONPYCACHEPREFIX=/tmp/python-pyc-cache python3 -m py_compile ...
+
+  To run it:
+
+  cd /Users/mduby/Code/PythonWorkspace/GeneSetExtractor/python-flask-server
+  python3 app.py

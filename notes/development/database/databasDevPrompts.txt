@@ -1,0 +1,87 @@
+
+
+
+20260623 - modify naming
+modify the populate_database.py so that when loading from s3, use the top level directory 
+for the gene set name prefix/collection name
+
+what would be the modification to the command below to add in a different prefix name 
+- load from s3 bucket
+python3 populate_database.py \
+--db-path ./20260609s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://geneset-marc-test02 \
+--output-log ./load_database_s3_320260609.log \
+--require-provenance
+
+
+20260622 - liger naming
+i loaded liger process generated data from /Users/mduby/Data/Broad/GeneSetIncubator/Liger/MarcTestOutput
+and got the name 
+GTEx__rna_sc_programs__dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+even though this is not GTEx related
+was this done in the populate_database.py script
+
+
+• Yes. That GTEx__... prefix was added by populate_database.py.
+
+  The relevant logic is in database/src/populate_database.py:858, where it builds:
+
+  standard_name = f"{collection_name}__{tissue}__{gene_set_name}"
+
+  And collection_name defaults to GTEx in the CLI parser at database/src/populate_database.py:1002:
+
+  parser.add_argument(
+      '--collection-name',
+      default='GTEx',
+
+  So if you ran the loader without --collection-name, the script would prepend GTEx__ to every loaded gene set, including LIGER-derived ones.
+
+  In your example:
+
+  - collection_name became GTEx
+  - tissue was inferred from the path as rna_sc_programs
+  - gene_set_name came from the GMT entry itself:
+    dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+
+  That is how you got:
+  GTEx__rna_sc_programs__dataset=parietal_epithelial_cell__signature=gene_loadings__program=Factor_10
+
+  So this was done by the loader, not by the LIGER process output.
+
+  If you want, I can patch the script so --collection-name is required instead of defaulting to GTEx, which would prevent this kind of accidental mislabeling.
+
+20260615 - extracting only certain models from s3
+for an s3 path like s3://dig-gene-set-data/GTEx/bladder/models/HZ1/extractor/age40_20/
+how can I s3 copy to another bucket only using the following guidelines:
+use HZ1 for GTEx aging and apply age-group filtering
+include 20-29 vs 50-59, 20-29 vs 60-69, 20-29 vs 70-79
+exclude 20-29 vs 30-39, 20-29 vs 40-49
+
+actually, the equivalent unix cp commands would be 
+cp dig-gene-set-data/GTEx/*/models/HZ1/extractor/age50_20/ <dir>
+cp dig-gene-set-data/GTEx/*/models/HZ1/extractor/age60_20/ <dir>
+cp dig-gene-set-data/GTEx/*/models/HZ1/extractor/age70_20/ <dir>
+
+
+20260607 - s3 dev
+
+modify the src/database/populate_database.py to add loading from an aws s3 bucket
+example bucket is s3://geneset-marc-test
+the s3 bucket location will be provided with the --s3-data-root option
+make the --s3-data-root and --data-root option not to be used at the same time
+modify the database/README.md markdown file to reflect the changes
+
+
+
+add the example command to the database/README.md markdown file
+
+have the new method read in the listing of the s3 bucket, then loop through each sub directory
+
+modify the src/database/populate_database.py to add log writing location specified by --output-log
+make the option optional, only writing to the file if specified
+
+
+
+summarize the python script src/database/populate_database.py
+
