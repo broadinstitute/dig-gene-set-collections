@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask, jsonify, request
 
 from utils.db_utils import (
@@ -10,6 +12,12 @@ from utils.web_utils import fetch_provenance_node_content
 
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+
+
+@app.before_request
+def log_request_url() -> None:
+    app.logger.info("request_url=%s", request.url)
 
 
 @app.get("/gene-set")
