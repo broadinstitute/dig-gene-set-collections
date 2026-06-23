@@ -1,22 +1,6 @@
 
 
-- 20260623 - load from s3 with colection name
-python3 populate_database.py \
---db-path ./20260609s3test.sqlite \
---schema-file ../schema/database-schema.sql \
---s3-data-root s3://geneset-marc-test02 \
---collection-name LIGER \
---output-log ./load_database_s3_320260609.log \
---require-provenance
 
-
-- load from s3 bucket
-python3 populate_database.py \
---db-path ./20260618s3test.sqlite \
---schema-file ../schema/database-schema.sql \
---s3-data-root s3://dig-gene-set-filtered \
---output-log ./20260618load_database_s3.log \
---require-provenance
 
 
 
