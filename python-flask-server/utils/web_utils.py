@@ -35,7 +35,7 @@ def _get_provenance_node_url(provenance_node_id: int) -> str | None:
 
 
 def _guess_mimetype(filename: str) -> str:
-    if filename.lower().endswith(".gmt"):
+    if filename.lower().endswith((".gmt", ".tsv")):
         return "text/plain"
 
     return mimetypes.guess_type(filename)[0] or "application/octet-stream"
