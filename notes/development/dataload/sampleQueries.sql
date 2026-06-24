@@ -31,4 +31,12 @@ and tnode.provenance_node_id = pedge.target_node_id;
 
 
 
+select gset.standard_name, gene.symbol 
+from gene_set gset, gene_symbol gene, gene_set_gene_symbol link
+where gset.gene_set_id = link.gene_set_id 
+and gene.gene_symbol_id = link.gene_symbol_id
+order by gset.standard_name, gene.symbol
+limit 20;
+
+
 
