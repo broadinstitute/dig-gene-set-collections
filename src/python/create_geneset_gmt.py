@@ -2,7 +2,7 @@
 """
 Export gene sets from the SQLite database to a tab-delimited GMT-style file.
 
-usage: python3 src/python/create_geneset_gmt.py --output_file output/genesets.gmt --db_file path/to/database.db
+usage: python3 src/python/create_geneset_gmt.py --output_file output/genesets.gmt --db_file path/to/database.db --log_file output/export.log
 
 """
 
@@ -116,12 +116,12 @@ def main() -> None:
         help='Path to the SQLite database file'
     )
     parser.add_argument(
-        '--output-log',
+        '--log_file',
         help='Optional path to a log file. If omitted, logs are only written to stderr.'
     )
 
     args = parser.parse_args()
-    configure_logging(args.output_log)
+    configure_logging(args.log_file)
     export_gene_sets(args.db_file, args.output_file)
 
 

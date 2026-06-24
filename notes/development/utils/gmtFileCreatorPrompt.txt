@@ -1,0 +1,33 @@
+
+
+
+
+- 20260623 - create gmt file from tthe database file
+in the src/python directory, create a create_geneset_gmt.py script 
+that takes in an output file name and sqlite file location as arguments
+loads the gene set and associated gene information 
+using the sql query:
+
+select gset.standard_name, gene.symbol 
+from gene_set gset, gene_symbol gene, gene_set_gene_symbol link
+where gset.gene_set_id = link.gene_set_id 
+and gene.gene_symbol_id = link.gene_symbol_id
+order by gset.standard_name, gene.symbol
+
+group the genes by gene_set and 
+create a tab delimited genesets.gmt file with the gene_set name in the first position 
+and the rest of the columns being the genes in the gene set
+log any gene set row created with its name and number of genes
+skip and log any duplicate gene set names
+
+
+
+
+python3 create_geneset_gmt.py \
+--output_file ./20260624geneset.gmt \
+--db_file ./20260623s3ligerRyanTest.sqlite \
+--log_file ./20260624genesetOutput.log
+
+
+
+

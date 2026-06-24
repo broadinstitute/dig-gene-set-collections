@@ -3,4 +3,7 @@
 python-flask-server/data/genseco_v0.sqlite
 *.pyc
 *.gmt
+*.gz
+*.log
+*.DS_Store
 
