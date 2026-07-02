@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from urllib import error, parse, request
 
-from flask import Response
+from flask import Response, redirect
 
 
 DB_PATH = Path(__file__).resolve().parents[1] / "data" / "genseco_v20260528.sqlite"
@@ -101,21 +101,6 @@ def fetch_provenance_node_content(provenance_node_id: int) -> Response:
     if dcc_url.startswith("s3://"):
         return _fetch_s3_with_aws_cli(dcc_url)
     elif dcc_url.startswith("http://") or dcc_url.startswith("https://"):
-        fetch_url = dcc_url
+        return redirect(dcc_url, code=302)
     else:
         return _html_error("<invalid operation>", 400)
-
-    try:
-        with request.urlopen(fetch_url) as remote_response:
-            body = remote_response.read()
-            content_type = remote_response.headers.get_content_type()
-            content_disposition = remote_response.headers.get("Content-Disposition")
-            return _build_success_response(body, fetch_url, content_type, content_disposition)
-    except error.HTTPError as exc:
-        return _html_error(f"unable to fetch {dcc_url}: HTTP {exc.code}", exc.code)
-    except error.URLError as exc:
-        return _html_error(f"unable to fetch {dcc_url}: {exc.reason}", 502)
-    except PermissionError as exc:
-        return _html_error(f"unable to fetch {dcc_url}: permission denied ({exc})", 403)
-    except OSError as exc:
-        return _html_error(f"unable to fetch {dcc_url}: {exc}", 500)
