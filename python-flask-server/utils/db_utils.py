@@ -38,6 +38,30 @@ def _parse_json_field(field_name: str, raw_value: str | None) -> tuple[object | 
         return None, f"{field_name} contains invalid JSON: {exc.msg}"
 
 
+def _get_gene_set_row_by_identifier(
+    connection: sqlite3.Connection,
+    gene_set_identifier: int | str,
+    selected_columns: str,
+) -> sqlite3.Row | None:
+    normalized_identifier = _normalize_gene_set_identifier(gene_set_identifier)
+    if isinstance(normalized_identifier, int):
+        where_clause = "gs.gene_set_id = ?"
+    else:
+        where_clause = "gs.standard_name = ?"
+
+    return connection.execute(
+        f"""
+        SELECT
+            {selected_columns}
+        FROM gene_set AS gs
+        LEFT JOIN provenance AS p
+            ON p.gene_set_id = gs.gene_set_id
+        WHERE {where_clause}
+        """,
+        (normalized_identifier,),
+    ).fetchone()
+
+
 def _build_gene_set_provenance_response(
     gene_set_row: sqlite3.Row,
     geneset_metadata: dict | None,
@@ -147,29 +171,19 @@ def get_gene_set_data(gene_set_identifier: int | str) -> dict | None:
     connection.row_factory = sqlite3.Row
 
     try:
-        normalized_identifier = _normalize_gene_set_identifier(gene_set_identifier)
-        if isinstance(normalized_identifier, int):
-            where_clause = "gs.gene_set_id = ?"
-        else:
-            where_clause = "gs.standard_name = ?"
-
-        gene_set_row = connection.execute(
-            f"""
-            SELECT
-                gs.gene_set_id,
-                gs.standard_name,
-                gs.collection_name,
-                gs.tags,
-                gs.license_code,
-                p.provenance_graph,
-                p.geneset_metadata
-            FROM gene_set AS gs
-            LEFT JOIN provenance AS p
-                ON p.gene_set_id = gs.gene_set_id
-            WHERE {where_clause}
+        gene_set_row = _get_gene_set_row_by_identifier(
+            connection,
+            gene_set_identifier,
+            """
+            gs.gene_set_id,
+            gs.standard_name,
+            gs.collection_name,
+            gs.tags,
+            gs.license_code,
+            p.provenance_graph,
+            p.geneset_metadata
             """,
-            (normalized_identifier,),
-        ).fetchone()
+        )
 
         if gene_set_row is None:
             return None
@@ -236,26 +250,22 @@ def list_gene_sets(limit: int = 20) -> list[dict]:
         connection.close()
 
 
-def get_gene_set_provenance(gene_set_id: int) -> dict | None:
+def get_gene_set_provenance(gene_set_identifier: int | str) -> dict | None:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
 
     try:
-        row = connection.execute(
+        row = _get_gene_set_row_by_identifier(
+            connection,
+            gene_set_identifier,
             """
-            SELECT
-                gs.gene_set_id,
-                gs.standard_name,
-                gs.collection_name,
-                p.provenance_graph,
-                p.geneset_metadata
-            FROM gene_set AS gs
-            LEFT JOIN provenance AS p
-                ON p.gene_set_id = gs.gene_set_id
-            WHERE gs.gene_set_id = ?
+            gs.gene_set_id,
+            gs.standard_name,
+            gs.collection_name,
+            p.provenance_graph,
+            p.geneset_metadata
             """,
-            (gene_set_id,),
-        ).fetchone()
+        )
 
         if row is None:
             return None
@@ -280,7 +290,7 @@ def get_gene_set_provenance(gene_set_id: int) -> dict | None:
             WHERE gene_set_id = ?
             ORDER BY provenance_node_id
             """,
-            (gene_set_id,),
+            (row["gene_set_id"],),
         ).fetchall()
         provenance_edge_rows = connection.execute(
             """
@@ -295,7 +305,7 @@ def get_gene_set_provenance(gene_set_id: int) -> dict | None:
             WHERE gene_set_id = ?
             ORDER BY provenance_edge_id
             """,
-            (gene_set_id,),
+            (row["gene_set_id"],),
         ).fetchall()
         knowledge_graph = _build_knowledge_graph(
             provenance_graph, provenance_node_rows, provenance_edge_rows
@@ -312,19 +322,16 @@ def get_gene_set_provenance(gene_set_id: int) -> dict | None:
         connection.close()
 
 
-def get_gene_set_graph(gene_set_id: int) -> list[dict] | None:
+def get_gene_set_graph(gene_set_identifier: int | str) -> list[dict] | None:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
 
     try:
-        gene_set_row = connection.execute(
-            """
-            SELECT gene_set_id
-            FROM gene_set
-            WHERE gene_set_id = ?
-            """,
-            (gene_set_id,),
-        ).fetchone()
+        gene_set_row = _get_gene_set_row_by_identifier(
+            connection,
+            gene_set_identifier,
+            "gs.gene_set_id",
+        )
 
         if gene_set_row is None:
             return None
@@ -349,7 +356,7 @@ def get_gene_set_graph(gene_set_id: int) -> list[dict] | None:
               AND tnode.provenance_node_id = pedge.target_node_id
             ORDER BY pedge.provenance_edge_id
             """,
-            (gene_set_id,),
+            (gene_set_row["gene_set_id"],),
         ).fetchall()
 
         return [_row_to_dict(row) for row in rows]
