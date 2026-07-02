@@ -13,6 +13,17 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     return {key: row[key] for key in row.keys()}
 
 
+def _normalize_gene_set_identifier(gene_set_identifier: int | str) -> int | str:
+    if isinstance(gene_set_identifier, int):
+        return gene_set_identifier
+
+    normalized_identifier = gene_set_identifier.strip()
+    if normalized_identifier.isdigit():
+        return int(normalized_identifier)
+
+    return normalized_identifier
+
+
 def _escape_like_pattern(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
@@ -131,13 +142,19 @@ def _build_knowledge_graph(
     }
 
 
-def get_gene_set_data(gene_set_id: int) -> dict | None:
+def get_gene_set_data(gene_set_identifier: int | str) -> dict | None:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
 
     try:
+        normalized_identifier = _normalize_gene_set_identifier(gene_set_identifier)
+        if isinstance(normalized_identifier, int):
+            where_clause = "gs.gene_set_id = ?"
+        else:
+            where_clause = "gs.standard_name = ?"
+
         gene_set_row = connection.execute(
-            """
+            f"""
             SELECT
                 gs.gene_set_id,
                 gs.standard_name,
@@ -149,9 +166,9 @@ def get_gene_set_data(gene_set_id: int) -> dict | None:
             FROM gene_set AS gs
             LEFT JOIN provenance AS p
                 ON p.gene_set_id = gs.gene_set_id
-            WHERE gs.gene_set_id = ?
+            WHERE {where_clause}
             """,
-            (gene_set_id,),
+            (normalized_identifier,),
         ).fetchone()
 
         if gene_set_row is None:
@@ -170,7 +187,7 @@ def get_gene_set_data(gene_set_id: int) -> dict | None:
             WHERE gsgs.gene_set_id = ?
             ORDER BY gsgs.gene_symbol_id
             """,
-            (gene_set_id,),
+            (gene_set_row["gene_set_id"],),
         ).fetchall()
 
         gene_set_data = _row_to_dict(gene_set_row)

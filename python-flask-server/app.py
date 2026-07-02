@@ -43,13 +43,13 @@ def log_request_url() -> None:
 @app.get("/gene-set/")
 @app.get("/gene-set")
 def gene_set() -> tuple:
-    gene_set_id = request.args.get("gene_set_id", type=int)
-    if gene_set_id is None:
+    gene_set_identifier = request.args.get("gene_set_id", type=str)
+    if not gene_set_identifier:
         return jsonify({"error": "gene_set_id query parameter is required"}), 400
 
-    data = get_gene_set_data(gene_set_id)
+    data = get_gene_set_data(gene_set_identifier)
     if data is None:
-        return jsonify({"error": f"gene_set_id {gene_set_id} not found"}), 404
+        return jsonify({"error": f"gene_set_id {gene_set_identifier} not found"}), 404
 
     return jsonify(data), 200
 
