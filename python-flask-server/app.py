@@ -13,6 +13,9 @@ from utils.db_utils import (
 from utils.web_utils import fetch_provenance_node_content
 
 
+GENE_SET_LIST_LIMIT = 200000
+
+
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +62,8 @@ def gene_set() -> tuple:
 @app.get("/gene-sets/")
 @app.get("/gene-sets")
 def gene_sets() -> tuple:
-    return jsonify(list_gene_sets(2000)), 200
+    limit = request.args.get("limit", default=GENE_SET_LIST_LIMIT, type=int)
+    return jsonify(list_gene_sets(limit)), 200
 
 
 @app.get("/genetics_provider/geneset_extractor/gene_set_provenance/")
@@ -105,7 +109,7 @@ def search() -> tuple:
     if not search_string:
         return jsonify({"error": "q query parameter is required"}), 400
 
-    limit = request.args.get("limit", default=200, type=int)
+    limit = request.args.get("limit", default=2000000, type=int)
     return jsonify(search_gene_sets(search_string, limit)), 200
 
 
