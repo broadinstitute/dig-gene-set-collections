@@ -1,5 +1,41 @@
 
 
+- 20260703 - load alpha + psychencode
+python3 populate_database.py \
+--db-path ./20260703s3PsychEncodetest.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-data \
+--output-log ./20260703load_database_s3.log \
+--require-provenance
+
+
+- 20260630 - new ryan load; first pass at prod
+python3 populate_database.py \
+--db-path ./20260630s3Alphatest.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-data \
+--output-log ./20260630load_database_s3.log \
+--require-provenance
+
+
+- load from s3 bucket
+python3 populate_database.py \
+--db-path ./20260618s3test.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-filtered \
+--output-log ./20260618load_database_s3.log \
+--require-provenance
+
+
+
+- test liger load from s3 bucket
+python3 populate_database.py \
+--db-path ./20260622s3ligerTest.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-liger-test \
+--output-log ./20260622load_database_s3.log \
+--require-provenance
+
 
 
 
