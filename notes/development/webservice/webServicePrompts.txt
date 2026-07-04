@@ -1,5 +1,16 @@
 
 
+20260703 - gene sets list limit
+for the /gene_sets call, add an optional limit parameter that defaults to a GENE_SET_LIST_LIMIT constant in the code
+set the GENE_SET_LIST_LIMIT constant to 200000
+
+for the /gene_sets call, add an optional collection parameter that 
+if provided only returns the gene sets with that matching collection
+
+add a /collections call that returns the distinct gene_set.collection_name in the database
+
+
+
 20260702 - get gene sets by name
 update if not already applicable the /gene-set call so that the parameter gene_set_id 
 can either be a gene set id integer or geneset standard_name text

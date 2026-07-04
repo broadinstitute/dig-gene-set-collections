@@ -63,7 +63,8 @@ def gene_set() -> tuple:
 @app.get("/gene-sets")
 def gene_sets() -> tuple:
     limit = request.args.get("limit", default=GENE_SET_LIST_LIMIT, type=int)
-    return jsonify(list_gene_sets(limit)), 200
+    collection = request.args.get("collection", type=str)
+    return jsonify(list_gene_sets(limit, collection)), 200
 
 
 @app.get("/genetics_provider/geneset_extractor/gene_set_provenance/")

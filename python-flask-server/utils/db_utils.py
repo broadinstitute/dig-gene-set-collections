@@ -225,25 +225,43 @@ def get_gene_set_data(gene_set_identifier: int | str) -> dict | None:
         connection.close()
 
 
-def list_gene_sets(limit: int = 20) -> list[dict]:
+def list_gene_sets(limit: int = 20, collection: str | None = None) -> list[dict]:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
 
     try:
-        rows = connection.execute(
-            """
-            SELECT
-                gene_set_id,
-                standard_name,
-                collection_name,
-                tags,
-                license_code
-            FROM gene_set
-            ORDER BY gene_set_id
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
+        safe_limit = max(1, limit)
+        if collection:
+            rows = connection.execute(
+                """
+                SELECT
+                    gene_set_id,
+                    standard_name,
+                    collection_name,
+                    tags,
+                    license_code
+                FROM gene_set
+                WHERE collection_name = ?
+                ORDER BY gene_set_id
+                LIMIT ?
+                """,
+                (collection, safe_limit),
+            ).fetchall()
+        else:
+            rows = connection.execute(
+                """
+                SELECT
+                    gene_set_id,
+                    standard_name,
+                    collection_name,
+                    tags,
+                    license_code
+                FROM gene_set
+                ORDER BY gene_set_id
+                LIMIT ?
+                """,
+                (safe_limit,),
+            ).fetchall()
 
         return [_row_to_dict(row) for row in rows]
     finally:
