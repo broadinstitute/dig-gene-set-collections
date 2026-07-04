@@ -7,9 +7,17 @@ set the GENE_SET_LIST_LIMIT constant to 200000
 for the /gene_sets call, add an optional collection parameter that 
 if provided only returns the gene sets with that matching collection
 
-add a /collections call that returns the distinct gene_set.collection_name in the database
+add a /collections call that returns the distinct gene_set.collection_name in the database 
+as {"collections": []}
 
-
+modify the /collections call so that it returns a list of collections name and number of gene sets in that collection
+for example: 
+{
+    "collections":
+    [
+        {"name": "GTEx", "number": 100}
+    ]
+}
 
 20260702 - get gene sets by name
 update if not already applicable the /gene-set call so that the parameter gene_set_id 

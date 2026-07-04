@@ -408,3 +408,25 @@ def search_gene_sets(search_string: str, limit: int = 200) -> list[dict]:
         return [_row_to_dict(row) for row in rows]
     finally:
         connection.close()
+
+
+def list_collections() -> list[dict]:
+    connection = sqlite3.connect(DB_PATH)
+    connection.row_factory = sqlite3.Row
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                collection_name AS name,
+                COUNT(*) AS number
+            FROM gene_set
+            WHERE collection_name IS NOT NULL
+            GROUP BY collection_name
+            ORDER BY collection_name
+            """
+        ).fetchall()
+
+        return [_row_to_dict(row) for row in rows]
+    finally:
+        connection.close()

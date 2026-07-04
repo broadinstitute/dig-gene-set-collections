@@ -7,6 +7,7 @@ from utils.db_utils import (
     get_gene_set_data,
     get_gene_set_graph,
     get_gene_set_provenance,
+    list_collections,
     list_gene_sets,
     search_gene_sets,
 )
@@ -65,6 +66,16 @@ def gene_sets() -> tuple:
     limit = request.args.get("limit", default=GENE_SET_LIST_LIMIT, type=int)
     collection = request.args.get("collection", type=str)
     return jsonify(list_gene_sets(limit, collection)), 200
+
+
+@app.get("/genetics_provider/geneset_extractor/collections/")
+@app.get("/genetics_provider/geneset_extractor/collections")
+@app.get("/genetics_provider/collections/")
+@app.get("/genetics_provider/collections")
+@app.get("/collections/")
+@app.get("/collections")
+def collections() -> tuple:
+    return jsonify({"collections": list_collections()}), 200
 
 
 @app.get("/genetics_provider/geneset_extractor/gene_set_provenance/")
