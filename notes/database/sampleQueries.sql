@@ -40,4 +40,12 @@ select count(gene_set_id), collection_name from gene_set group by collection_nam
 
 select standard_name, gmt_gene_set_name from gene_set limit 10;
 
+select standard_name, gmt_gene_set_name, gmt_gene_set_description, collection_name from gene_set 
+limit 10;
+
+select standard_name, gmt_gene_set_name, gmt_gene_set_description, collection_name from gene_set 
+where collection_name = 'GEO_BULK'
+limit 5;
+
+
 

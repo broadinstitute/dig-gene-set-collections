@@ -290,14 +290,14 @@ class GeneSeCoDatabasePopulator:
         logger.info(f"Found {len(gmt_files)} .gmt files in {root_path}")
         return gmt_files
 
-    def parse_gmt_file(self, gmt_file: DataFileRef) -> List[Tuple[str, List[str]]]:
+    def parse_gmt_file(self, gmt_file: DataFileRef) -> List[Tuple[str, str, List[str]]]:
         """
         Parse GMT file.
         
-        Format: <gene_set_name>TAB<gene_1> <gene_2> ... <gene_n>
+        Format: <gene_set_name>TAB<description>TAB<gene_1> <gene_2> ... <gene_n>
         
         Returns:
-            List of (gene_set_name, gene_list) tuples
+            List of (gene_set_name, gene_set_description, gene_list) tuples
         """
         gene_sets = []
         try:
@@ -307,21 +307,24 @@ class GeneSeCoDatabasePopulator:
                     continue
                 
                 parts = line.split('\t')
-                if len(parts) < 2:
-                    logger.warning(f"{gmt_file.location}:{line_num} - Invalid line format (missing tab)")
+                if len(parts) < 3:
+                    logger.warning(
+                        f"{gmt_file.location}:{line_num} - Invalid line format "
+                        "(expected gene set name, description, and at least one gene)"
+                    )
                     continue
                 
                 gene_set_name = parts[0]
-                # Second column is typically description (optional in some GMT files)
-                # Genes are space-separated, starting from the second column
-                genes_str = '\t'.join(parts[1:])
+                gene_set_description = parts[1]
+                # Genes are space-separated or tab-delimited, starting from the third column.
+                genes_str = '\t'.join(parts[2:])
                 genes = genes_str.split()
                 
                 if not genes:
                     logger.warning(f"{gmt_file.location}:{line_num} - No genes found for {gene_set_name}")
                     continue
                 
-                gene_sets.append((gene_set_name, genes))
+                gene_sets.append((gene_set_name, gene_set_description, genes))
             
             logger.info(f"Parsed {len(gene_sets)} gene sets from {gmt_file.location}")
             return gene_sets
@@ -464,6 +467,7 @@ class GeneSeCoDatabasePopulator:
         self,
         standard_name: str,
         gmt_gene_set_name: str,
+        gmt_gene_set_description: str,
         collection_name: str,
         license_code: str,
         tags: str = None,
@@ -478,15 +482,30 @@ class GeneSeCoDatabasePopulator:
             if gene_set_id is not None:
                 # Insert with explicit ID
                 self.cursor.execute(
-                    'INSERT INTO gene_set (gene_set_id, standard_name, gmt_gene_set_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?, ?)',
-                    (gene_set_id, standard_name, gmt_gene_set_name, collection_name, license_code, tags)
+                    'INSERT INTO gene_set (gene_set_id, standard_name, gmt_gene_set_name, gmt_gene_set_description, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    (
+                        gene_set_id,
+                        standard_name,
+                        gmt_gene_set_name,
+                        gmt_gene_set_description,
+                        collection_name,
+                        license_code,
+                        tags,
+                    )
                 )
                 return (gene_set_id, True)
             else:
                 # Auto-increment ID
                 self.cursor.execute(
-                    'INSERT INTO gene_set (standard_name, gmt_gene_set_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?)',
-                    (standard_name, gmt_gene_set_name, collection_name, license_code, tags)
+                    'INSERT INTO gene_set (standard_name, gmt_gene_set_name, gmt_gene_set_description, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?, ?)',
+                    (
+                        standard_name,
+                        gmt_gene_set_name,
+                        gmt_gene_set_description,
+                        collection_name,
+                        license_code,
+                        tags,
+                    )
                 )
                 self.conn.commit()
                 return (self.cursor.lastrowid, True)
@@ -859,7 +878,7 @@ class GeneSeCoDatabasePopulator:
                     self.insert_collection(effective_collection_name)
                     initialized_collection_names.add(effective_collection_name)
                 
-                for gene_set_name, genes in gene_sets:
+                for gene_set_name, gene_set_description, genes in gene_sets:
                     try:
                         # Derive tissue from path: .../genesets/{tissue}/models/{model_id}/tissue_extractor/genesets.gmt
                         tissue = None
@@ -895,6 +914,7 @@ class GeneSeCoDatabasePopulator:
                         gene_set_id, gene_set_was_inserted = self.insert_gene_set(
                             standard_name=standard_name,
                             gmt_gene_set_name=gene_set_name,
+                            gmt_gene_set_description=gene_set_description,
                             collection_name=effective_collection_name,
                             license_code=license_code,
                             gene_set_id=gene_set_id
