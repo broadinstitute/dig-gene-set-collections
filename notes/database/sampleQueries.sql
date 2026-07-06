@@ -38,4 +38,6 @@ select * from provenance_node where provenance_node_id = 92;
 select count(gene_set_id), collection_name from gene_set group by collection_name;
 
 
+select standard_name, gmt_gene_set_name from gene_set limit 10;
+
 

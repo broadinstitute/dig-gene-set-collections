@@ -463,6 +463,7 @@ class GeneSeCoDatabasePopulator:
     def insert_gene_set(
         self,
         standard_name: str,
+        gmt_gene_set_name: str,
         collection_name: str,
         license_code: str,
         tags: str = None,
@@ -477,15 +478,15 @@ class GeneSeCoDatabasePopulator:
             if gene_set_id is not None:
                 # Insert with explicit ID
                 self.cursor.execute(
-                    'INSERT INTO gene_set (gene_set_id, standard_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?)',
-                    (gene_set_id, standard_name, collection_name, license_code, tags)
+                    'INSERT INTO gene_set (gene_set_id, standard_name, gmt_gene_set_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?, ?)',
+                    (gene_set_id, standard_name, gmt_gene_set_name, collection_name, license_code, tags)
                 )
                 return (gene_set_id, True)
             else:
                 # Auto-increment ID
                 self.cursor.execute(
-                    'INSERT INTO gene_set (standard_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?)',
-                    (standard_name, collection_name, license_code, tags)
+                    'INSERT INTO gene_set (standard_name, gmt_gene_set_name, collection_name, license_code, tags) VALUES (?, ?, ?, ?, ?)',
+                    (standard_name, gmt_gene_set_name, collection_name, license_code, tags)
                 )
                 self.conn.commit()
                 return (self.cursor.lastrowid, True)
@@ -893,6 +894,7 @@ class GeneSeCoDatabasePopulator:
                         # Insert gene set with explicit ID
                         gene_set_id, gene_set_was_inserted = self.insert_gene_set(
                             standard_name=standard_name,
+                            gmt_gene_set_name=gene_set_name,
                             collection_name=effective_collection_name,
                             license_code=license_code,
                             gene_set_id=gene_set_id

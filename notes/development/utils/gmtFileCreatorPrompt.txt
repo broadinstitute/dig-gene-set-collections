@@ -1,6 +1,14 @@
 
 
 
+- 20260706 - add gene set name from gmt file
+in the populate_database.py script, using the src/data/database-schema.sql file as reference, 
+during the gene set loading,
+copy the first column name from the GMT file into the 
+gene_set.gmt_gene_set_name database field 
+
+
+
 
 - 20260623 - create gmt file from tthe database file
 in the src/python directory, create a create_geneset_gmt.py script 

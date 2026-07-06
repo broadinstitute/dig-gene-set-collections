@@ -1,5 +1,14 @@
 
 
+- 20260706 - test new schema changes
+python3 populate_database.py \
+--db-path ./20260706s3testChanges.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-test \
+--output-log ./20260706load_database_s3.log \
+--require-provenance
+
+
 - 20260706 - load amp AMD
 python3 populate_database.py \
 --db-path ./20260706s3ampAD.sqlite \

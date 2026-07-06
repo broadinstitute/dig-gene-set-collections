@@ -81,6 +81,7 @@ CREATE TABLE gene_set (
     standard_name   TEXT    NOT NULL
                             UNIQUE,
     collection_name TEXT    NOT NULL,
+    gmt_gene_set_name   TEXT    NOT NULL,
     tags            TEXT,
     license_code    TEXT    NOT NULL,
     PRIMARY KEY (
