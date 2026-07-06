@@ -1,5 +1,68 @@
 
 
+20260703 - gene sets list limit
+for the /gene_sets call, add an optional limit parameter that defaults to a GENE_SET_LIST_LIMIT constant in the code
+set the GENE_SET_LIST_LIMIT constant to 200000
+
+for the /gene_sets call, add an optional collection parameter that 
+if provided only returns the gene sets with that matching collection
+
+add a /collections call that returns the distinct gene_set.collection_name in the database 
+as {"collections": []}
+
+modify the /collections call so that it returns a list of collections name and number of gene sets in that collection
+for example: 
+{
+    "collections":
+    [
+        {"name": "GTEx", "number": 100}
+    ]
+}
+
+20260702 - get gene sets by name
+update if not already applicable the /gene-set call so that the parameter gene_set_id 
+can either be a gene set id integer or geneset standard_name text
+
+
+do the same to any other web service calls that take in a gene_set_id parameter
+
+
+20260625 - fix ngnix translating web page address links
+when returning a web page link on production, the web page internal links get translated by the application
+for example, link https://github.com/flannick/dig-gene-set-extractors gets replaced by 
+https://translator.broadinstitute.org/flannick/dig-gene-set-extractors
+which breaks the page
+leave the web pages source code as is, just returnt he web page
+
+
+20260623 - ngnix issue?
+for a call https://translator.broadinstitute.org/genetics_provider/geneset_extractor/search?q=smooth&limit=3
+I get the following log entry 
+INFO:app:request_url=http://translator.broadinstitute.org/search?q=smooth&limit=3
+and the following error in postman
+<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try
+    again.</p>
+
+
+
+
+for a GET call to the web service through ngnix at 
+https://translator.broadinstitute.org/genetics_provider/geneset_extractor/gene-sets
+I get the following in the logs, which seems incorrect
+INFO:app:request_url=http://translator.broadinstitute.org/gene-sets
+additionally, the follwing call doesn't work:
+https://translator.broadinstitute.org/genetics_provider/search?q=smooth&limit=3
+
+
+20260623 - search of gene_sets 
+in app.py, add a hack secure search of gene_sets by string in database gene_set.standard_name
+the /search call should also accept a limit integer paramter to limit the number of results are returned
+the limit parameter should default to 200 if not provided
+
 
 20260623 - logging
 for all app.py web service calls, add a log entry with the url of the call
