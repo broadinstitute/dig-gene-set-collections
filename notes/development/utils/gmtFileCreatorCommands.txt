@@ -1,0 +1,13 @@
+
+
+python3 src/python/create_geneset_gmt.py \
+--db_file path/to/database.db \
+--output_dir output/collections \
+--log_file output/export.log
+
+
+python3 src/python/create_geneset_gmt.py \
+--db_file ./20260706s3testDescChanges.sqlite \
+--output_dir ./genesets \
+--log_file ./20260706gmt_file_creator.log
+
