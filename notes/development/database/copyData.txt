@@ -1,5 +1,22 @@
 
 
+- 20260706 - load amp AMD
+python3 populate_database.py \
+--db-path ./20260706s3ampAD.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-data \
+--output-log ./20260706load_database_s3.log \
+--require-provenance
+
+
+- 20260704 - load igvf and immport
+python3 populate_database.py \
+--db-path ./20260704s3igvfImmport.sqlite \
+--schema-file ../schema/database-schema.sql \
+--s3-data-root s3://dig-gene-set-data \
+--output-log ./20260704load_database_s3.log \
+--require-provenance
+
 - 20260703 - load alpha + psychencode
 python3 populate_database.py \
 --db-path ./20260703s3PsychEncodetest.sqlite \

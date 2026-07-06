@@ -33,3 +33,9 @@ and tnode.provenance_node_id = pedge.target_node_id;
 select * from provenance_edge where provenance_edge_id = 87;
 
 select * from provenance_node where provenance_node_id = 92;
+
+
+select count(gene_set_id), collection_name from gene_set group by collection_name;
+
+
+
