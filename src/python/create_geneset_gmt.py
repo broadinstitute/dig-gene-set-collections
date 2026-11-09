@@ -3,11 +3,8 @@
 Export gene sets from the SQLite database to a tab-delimited GMT-style file.
 
 usage: python3 src/python/create_geneset_gmt.py --output_file output/genesets.gmt --db_file path/to/database.db --log_file output/export.log
+usage: python3 src/python/create_geneset_gmt.py --db_file path/to/database.db --output_dir output/collections --log_file output/export.log
 
-  python3 src/python/create_geneset_gmt.py --db_file path/to/database.db --output_file output/genesets.gmt
-
-  python3 src/python/create_geneset_gmt.py --db_file path/to/database.db --output_dir output/collections
-  
 """
 
 import argparse
